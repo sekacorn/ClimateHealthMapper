@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: climate-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - JWT_SECRET=${JWT_SECRET:-ClimateHealthMapper-DefaultSecretKey-ChangeInProduction-2025}
+      - JWT_REQUIRE_MFA=${JWT_REQUIRE_MFA:-false}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - INTEGRATOR_SERVICE_URL=http://climate-integrator:8081
+      - VISUALIZER_SERVICE_URL=http://climate-visualizer:8082
+      - SESSION_SERVICE_URL=http://user-session:8083
+      - LLM_SERVICE_URL=http://llm-service:8084
+      - COLLABORATION_SERVICE_URL=http://collaboration-service:8085
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:4200}
+    depends_on:
+      - redis
+    networks:
+      - climate-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis for rate limiting and caching
+  redis:
+    image: redis:7-alpine
+    container_name: climate-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - climate-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  climate-network:
+    driver: bridge
+    name: climate-network
+
+volumes:
+  redis-data:
+    driver: local

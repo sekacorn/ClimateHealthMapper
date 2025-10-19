@@ -1,0 +1,252 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: climate-postgres
+    environment:
+      POSTGRES_DB: climatehealth
+      POSTGRES_USER: climateuser
+      POSTGRES_PASSWORD: climatepass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/postgres/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - climate-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U climateuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: climate-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./database/redis/config.yaml:/usr/local/etc/redis/redis.conf
+    networks:
+      - climate-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: climate-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/climatehealth
+      SPRING_DATASOURCE_USERNAME: climateuser
+      SPRING_DATASOURCE_PASSWORD: climatepass
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - climate-network
+    restart: unless-stopped
+
+  # Climate Integrator Service
+  climate-integrator:
+    build:
+      context: ./backend/climate-integrator
+      dockerfile: Dockerfile
+    container_name: climate-integrator
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/climatehealth
+      SPRING_DATASOURCE_USERNAME: climateuser
+      SPRING_DATASOURCE_PASSWORD: climatepass
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - climate-network
+    restart: unless-stopped
+
+  # Climate Visualizer Service
+  climate-visualizer:
+    build:
+      context: ./backend/climate-visualizer
+      dockerfile: Dockerfile
+    container_name: climate-visualizer
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/climatehealth
+      SPRING_DATASOURCE_USERNAME: climateuser
+      SPRING_DATASOURCE_PASSWORD: climatepass
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      AI_MODEL_URL: http://ai-model:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - climate-network
+    restart: unless-stopped
+
+  # User Session Service
+  user-session:
+    build:
+      context: ./backend/user-session
+      dockerfile: Dockerfile
+    container_name: climate-user-session
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/climatehealth
+      SPRING_DATASOURCE_USERNAME: climateuser
+      SPRING_DATASOURCE_PASSWORD: climatepass
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - climate-network
+    restart: unless-stopped
+
+  # LLM Service
+  llm-service:
+    build:
+      context: ./backend/llm-service
+      dockerfile: Dockerfile
+    container_name: climate-llm-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/climatehealth
+      SPRING_DATASOURCE_USERNAME: climateuser
+      SPRING_DATASOURCE_PASSWORD: climatepass
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      LLM_API_KEY: ${LLM_API_KEY:-your-api-key-here}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - climate-network
+    restart: unless-stopped
+
+  # Collaboration Service
+  collaboration-service:
+    build:
+      context: ./backend/collaboration-service
+      dockerfile: Dockerfile
+    container_name: climate-collaboration
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/climatehealth
+      SPRING_DATASOURCE_USERNAME: climateuser
+      SPRING_DATASOURCE_PASSWORD: climatepass
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - climate-network
+    restart: unless-stopped
+
+  # AI Model Service
+  ai-model:
+    build:
+      context: ./ai-model
+      dockerfile: Dockerfile
+    container_name: climate-ai-model
+    ports:
+      - "8000:8000"
+    environment:
+      PYTHON_ENV: production
+      DATABASE_URL: postgresql://climateuser:climatepass@postgres:5432/climatehealth
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - climate-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: climate-frontend
+    ports:
+      - "3000:80"
+    environment:
+      REACT_APP_API_GATEWAY_URL: http://localhost:8080
+      REACT_APP_WS_URL: ws://localhost:8085
+    depends_on:
+      - api-gateway
+    networks:
+      - climate-network
+    restart: unless-stopped
+
+  # NGINX Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: climate-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - frontend
+      - api-gateway
+    networks:
+      - climate-network
+    restart: unless-stopped
+
+networks:
+  climate-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:

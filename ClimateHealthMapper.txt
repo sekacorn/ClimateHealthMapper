@@ -1,0 +1,289 @@
+ClimateHealthMapper
+ClimateHealthMapper is a production-ready, modular, full-stack web application designed to mitigate the health impacts of climate change by integrating environmental data (e.g., air quality, temperature from NOAA, EPA), health data (e.g., FHIR-compliant EHRs), and genomic data (e.g., VCF files from 23andMe) to provide personalized health risk assessments, 3D climate-health visualizations, and collaborative tools. It empowers individuals, healthcare providers, and policymakers, particularly in vulnerable regions like Sub-Saharan Africa and South Asia, to address WHO’s projected 250,000 annual deaths from climate-related health issues by 2050. Built with open-source technologies, it ensures global accessibility, supports all 16 MBTI user types (ENTJ, INFP, INFJ, ESTP, INTJ, INTP, ISTJ, ESFJ, ISFP, ENTP, ISFJ, ESFP, ENFJ, ESTJ, ISTP, INFP), and aligns with tools like QGIS and FHIR-compliant systems without proprietary code. The application leverages AI for health risk predictions, Three.js for 3D visualizations, and LLMs for intuitive queries, advancing humanity by fostering climate-resilient health solutions.
+🌍 Purpose and Impact
+    • Addresses Climate-Health Nexus: Combines environmental, health, and genomic data to predict and mitigate climate-related health risks (e.g., respiratory issues, heatstroke).
+    • Inclusive Design: Tailors interfaces for all 16 MBTI types, ensuring usability for diverse users.
+    • Global Accessibility: Open-source architecture enables deployment in low-resource settings, with multilingual support for diverse regions.
+    • Unique Value: Unlike QGIS (geospatial analysis) or FHIR systems (health data), ClimateHealthMapper integrates environmental, health, and genomic data with AI, 3D visualizations, and collaboration for personalized and community-level health solutions.
+🛠️ Key Features
+    1. Data Integration:
+        ◦ Aggregates environmental data (CSV/JSON from NOAA, EPA), health data (FHIR-compliant EHRs), and genomic data (VCF from 23andMe, AncestryDNA).
+        ◦ Supports CSV, JSON, FHIR, and VCF formats for compatibility with QGIS and FHIR systems.
+        ◦ Validates inputs to ensure data integrity.
+    2. 3D Visualization:
+        ◦ Renders interactive 3D climate-health maps (e.g., air quality impact zones) and genomic susceptibility visualizations (e.g., disease risk heatmaps) using Three.js.
+        ◦ Supports zoom/pan controls and exports as PNG/SVG/STL for reports or 3D printing.
+        ◦ Tailors visuals for all 16 MBTI types (e.g., strategic for ENTJ, creative for INFP).
+    3. AI-Driven Health Risk Predictions:
+        ◦ Uses PyTorch to predict health risks (e.g., asthma exacerbation due to air quality) and personalized interventions based on environmental, health, and genomic data.
+        ◦ Provides individual and community-level recommendations (e.g., “Relocate outdoor activities during high PM2.5 levels”).
+    4. Natural Language Queries via LLM:
+        ◦ Integrates an LLM (xAI API or Hugging Face Transformers) for queries like:
+            ▪ “What’s my health risk from local air quality?” (ENTJ: strategic advice)
+            ▪ “How can I protect my community from heatwaves?” (INFJ: empathetic solutions)
+            ▪ “Quick health tips for my genetic profile!” (ESTP: actionable steps)
+        ◦ Supports troubleshooting (e.g., “Why is my FHIR data import failing?”).
+    5. Real-Time Collaboration:
+        ◦ Enables individuals, healthcare providers, and policymakers to collaborate via WebSocket, sharing health risk assessments and mitigation plans.
+        ◦ Supports MBTI-tailored collaboration (e.g., leadership tools for ENTJ, empathy for INFJ).
+    6. Computing Resource Monitoring:
+        ◦ Monitors CPU/memory/GPU usage for 3D rendering and AI predictions, with dynamic multithreading (ExecutorService, multiprocessing) based on resource availability.
+    7. Troubleshooting Support:
+        ◦ Provides manual and LLM-assisted debugging for data imports, visualizations, and predictions, with MBTI-specific guidance (e.g., detailed logs for INTJ, quick fixes for ESTP).
+    8. Compatibility with Existing Tools:
+        ◦ Mimics QGIS’s geospatial visualizations and FHIR’s health data workflows using open-source tools (Three.js, BioPython).
+        ◦ Supports CSV, JSON, FHIR, and VCF formats for seamless integration.
+📂 Project Directory Layout
+ClimateHealthMapper/
+├── README.md                          # Setup, usage, troubleshooting, MBTI usability, compatibility notes
+├── docker-compose.yml                 # Orchestrates containers
+│
+├── backend/                           # Spring Boot microservices (Java 17)
+│   ├── climate-integrator/            # Integrates environmental, health, genomic data
+│   │   ├── src/main/java/com/climate/integrator/
+│   │   │   ├── controller/            # REST endpoints for data upload (CSV, JSON, FHIR, VCF)
+│   │   │   ├── service/               # Data parsing, validation, integration
+│   │   │   ├── model/                 # EnvData, HealthData, GenomicData
+│   │   │   ├── utils/                 # Input validators, format converters
+│   │   │   └── ClimateIntegratorApp.java # Main application entry
+│   │   ├── resources/application.yml  # Config: APIs, database, security
+│   │   └── Dockerfile
+│   │
+│   ├── climate-visualizer/            # Generates 3D climate-health visualizations
+│   │   ├── src/main/java/com/climate/visualizer/
+│   │   │   ├── controller/            # Visualization, export REST endpoints
+│   │   │   ├── service/               # 3D model generation, health predictions
+│   │   │   ├── model/                 # ClimateMap, HealthMap
+│   │   │   ├── utils/                 # Resource monitoring, multithreading
+│   │   │   └── ClimateVisualizerApp.java # Main application entry
+│   │   ├── resources/application.yml  # Config: dependencies, resource limits
+│   │   └── Dockerfile
+│   │
+│   ├── user-session/                  # Manages sessions, annotations, states
+│   │   ├── src/main/java/com/climate/session/
+│   │   │   ├── controller/            # Session, annotation endpoints
+│   │   │   ├── service/               # Session, bookmark logic
+│   │   │   ├── model/                 # UserSession, Annotation
+│   │   │   └── UserSessionApp.java    # Main application entry
+│   │   ├── resources/application.yml  # Config: database, auth
+│   │   └── Dockerfile
+│   │
+│   ├── llm-service/                   # LLM for queries and troubleshooting
+│   │   ├── src/main/java/com/climate/llm/
+│   │   │   ├── controller/            # LLM query, troubleshooting endpoints
+│   │   │   ├── service/               # LLM integration, error analysis
+│   │   │   ├── model/                 # QueryContext, LLMResponse, ErrorLog
+│   │   │   └── LLMApp.java            # Main application entry
+│   │   ├── resources/application.yml  # Config: LLM API, security
+│   │   └── Dockerfile
+│   │
+│   ├── collaboration-service/         # Real-time collaborative sessions
+│   │   ├── src/main/java/com/climate/collaboration/
+│   │   │   ├── controller/            # WebSocket endpoints
+│   │   │   ├── service/               # Session management
+│   │   │   ├── model/                 # CollabSession, UserAction
+│   │   │   └── CollaborationApp.java  # Main application entry
+│   │   ├── resources/application.yml  # Config: WebSocket, auth
+│   │   └── Dockerfile
+│   │
+│   └── api-gateway/                   # Routes requests to microservices
+│       ├── src/main/java/com/climate/gateway/
+│       │   ├── controller/            # Custom routes
+│       │   └── ApiGatewayApp.java     # Main application entry
+│       ├── resources/application.yml  # Config: routes, security
+│       └── Dockerfile
+│
+├── frontend/                          # React-based UI with Three.js, LLM, collaboration
+│   ├── public/                        # Static assets
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── DataUpload.jsx         # Uploads CSV, JSON, FHIR, VCF data
+│   │   │   ├── ClimateViewer.jsx      # 3D climate-health visualizations
+│   │   │   ├── HealthDetails.jsx      # Displays health risk predictions
+│   │   │   ├── AnnotationTool.jsx     # Interactive annotations
+│   │   │   ├── ExportTool.jsx         # Exports visualizations as PNG/SVG/STL
+│   │   │   ├── LLMChat.jsx            # Natural language query interface
+│   │   │   ├── ResourceMonitor.jsx    # Resource usage display
+│   │   │   └── CollabPanel.jsx        # Collaboration interface
+│   │   ├── services/
+│   │   │   ├── api.js                 # Axios-based API client
+│   │   │   └── websocket.js           # WebSocket client
+│   │   ├── pages/
+│   │   │   ├── Home.jsx               # Landing page
+│   │   │   ├── Analyze.jsx            # Health risk analysis
+│   │   │   ├── Explore.jsx            # Interactive climate-health visualization
+│   │   │   ├── Troubleshoot.jsx       # Debugging interface
+│   │   │   └── Collaborate.jsx        # Collaboration page
+│   │   └── App.jsx                    # Main app component
+│   ├── package.json                   # Node dependencies
+│   └── Dockerfile
+│
+├── ai-model/                          # Python-based AI for health predictions
+│   ├── health_predictor.py            # FastAPI for health risk predictions
+│   ├── model.pt                       # Pretrained PyTorch model
+│   ├── requirements.txt               # Python dependencies
+│   └── Dockerfile
+│
+├── database/
+│   ├── postgres/
+│   │   └── schema.sql                 # PostgreSQL schema for environmental, health, genomic data
+│   └── redis/
+│   │   └── config.yaml                # Redis config for caching
+│
+└── infra/
+    ├── nginx/
+    │   └── default.conf               # NGINX reverse proxy config
+    └── kubernetes/
+        ├── climate-integrator-deployment.yml
+        ├── climate-visualizer-deployment.yml
+        ├── user-session-deployment.yml
+        ├── llm-service-deployment.yml
+        ├── collaboration-service-deployment.yml
+        ├── api-gateway-deployment.yml
+        └── frontend-deployment.yml
+⚙️ Tech Stack
+Layer
+Technology
+Frontend
+React 18, Three.js, Tailwind CSS, Axios, Vite, Socket.IO
+Backend
+Java 17, Spring Boot 3, Spring Cloud Gateway, Spring Security, Spring WebSocket
+AI Service
+Python 3.10, FastAPI, PyTorch, NumPy, pandas, Biopython
+LLM Service
+Python 3.10, FastAPI, Hugging Face Transformers (or xAI API)
+Database
+PostgreSQL, Redis
+Auth
+JWT, OAuth2 (for EHR/API integrations)
+Infra
+Docker, Docker Compose, Kubernetes, NGINX
+CI/CD
+GitHub Actions for linting, testing, deployment
+Monitoring
+Prometheus, Grafana, SLF4J, Loki
+Safety
+OWASP ZAP, Helmet.js, Rate-limiting
+📚 Recommended Libraries
+    • Frontend: react, react-dom, three, @react-three/fiber, @react-three/drei, axios, socket.io-client, tailwindcss, sanitize-html, helmet, react-plotly.js, react-chatbot-kit, react-device-detect.
+    • Backend: spring-boot-starter-web, spring-boot-starter-security, spring-boot-starter-data-jpa, spring-boot-starter-websocket, spring-cloud-gateway, jjwt, hibernate-validator, resilience4j, j3d, micrometer, logback, hapi-fhir, biojava.
+    • AI Service: fastapi, pytorch, numpy, pandas, biopython, gunicorn, python-decouple, python-multiprocessing.
+    • LLM Service: fastapi, transformers, requests, pydantic, sentence-transformers.
+    • Database: postgresql, redis.
+    • Infra: docker, nginx, prometheus-client, grafana, loki.
+🔒 Safety and Copyright Compliance
+    • Input Validation: hibernate-validator, sanitize-html, pydantic to prevent injection attacks.
+    • Data Encryption: TLS for transit, AES-256 for at-rest data (health, genomic records).
+    • Rate Limiting: Applied via Spring Cloud Gateway.
+    • CORS/CSRF: Strict policies in NGINX and Spring Security.
+    • Logging: SLF4J with Loki; no sensitive data logged.
+    • Copyright: Uses open-source libraries (Apache/MIT licenses). Avoids proprietary code from QGIS or FHIR systems. CI/CD includes license-checker.
+    • Disclaimer: README.md states: “ClimateHealthMapper is an original work, using open-source libraries for compatibility with CSV, JSON, FHIR, and VCF formats, without proprietary code from QGIS, FHIR systems, or other tools.”
+🧠 MBTI Usability Enhancements
+    • ENTJ (The Commander): Strategic dashboards with health risk metrics and mitigation plans (e.g., “Implement these community health strategies”); actionable, results-focused LLM advice; leadership tools in CollabPanel.jsx.
+    • INFP (The Mediator): Artistic, narrative-driven 3D climate-health visualizations (e.g., colorful air quality maps); creative, value-driven LLM suggestions (e.g., “Use storytelling to raise climate-health awareness”); brainstorming spaces with visual annotations.
+    • INFJ (The Advocate): Intuitive interfaces with empathetic prompts (e.g., “Your genetic profile suggests these climate-health priorities”); holistic, context-aware LLM advice; tools for fostering group harmony.
+    • ESTP (The Entrepreneur): Dynamic, interactive controls with instant feedback (e.g., real-time health risk alerts); concise, actionable LLM tips (e.g., “Take these health steps now”); fast-paced, live-update collaboration.
+    • INTJ (The Mastermind): Analytical dashboards with JSON/log outputs; detailed, strategic LLM responses; structured collaboration tools.
+    • INTP (The Thinker): In-depth data exploration with raw JSON outputs; logical, detailed LLM troubleshooting; flexible, idea-driven collaboration.
+    • ISTJ (The Logistician): Structured, step-by-step navigation; precise, rule-based LLM guidance; organized, task-focused collaboration.
+    • ESFJ (The Consul): Supportive, visually engaging interfaces with simplified summaries; warm, community-focused LLM responses; collaborative tools emphasizing group support.
+    • ISFP (The Adventurer): Visually rich, sensory-driven interfaces; gentle, encouraging LLM suggestions; creative, low-pressure collaboration spaces.
+    • ENTP (The Debater): Interactive, exploratory dashboards with innovative visuals; witty, idea-sparking LLM responses; dynamic, debate-driven collaboration.
+    • ISFJ (The Defender): User-friendly, supportive interfaces with clear instructions; nurturing, practical LLM advice; collaboration tools fostering stability and trust.
+    • ESFP (The Entertainer): Vibrant, engaging visualizations with immediate feedback; lively, action-oriented LLM tips; energetic, real-time collaboration.
+    • ENFJ (The Protagonist): Inspirational interfaces with motivational prompts; visionary, empathetic LLM responses; collaboration tools for team leadership.
+    • ESTJ (The Executive): Structured dashboards with clear metrics; direct, results-driven LLM advice; authoritative, task-oriented collaboration.
+    • ISTP (The Virtuoso): Practical, hands-on interfaces with minimalistic design; concise, problem-solving LLM responses; flexible, independent collaboration.
+    • INFP (The Idealist): Repeated for completeness; same as above.
+🌐 Compatibility with Existing Tools
+    • QGIS: Supports CSV/GeoJSON parsing for geospatial visualizations, mimicking QGIS’s mapping capabilities with Three.js and GeoPandas for climate-health maps.
+    • FHIR-Compliant EHRs (e.g., Epic): Integrates health data via FHIR APIs, using hapi-fhir for compatibility with clinical systems.
+    • BioPython: Parses VCF files for genomic data integration, ensuring compatibility with genomic tools.
+    • LLM Guidance: Users can query (e.g., “Import QGIS-compatible GeoJSON data” or “Analyze FHIR health records”) with MBTI-tailored responses.
+🖼️ 3D Visualization and Engagement
+    • Functionality: Renders 3D climate-health maps (e.g., air quality impact zones) and genomic susceptibility visualizations (e.g., disease risk heatmaps) in ClimateViewer.jsx.
+    • Frontend: Supports zoom/pan, MBTI-tailored visuals (e.g., vibrant for ESFP, strategic for ENTJ), and exports as PNG/SVG/STL.
+    • Backend: climate-visualizer generates 3D models with j3d, supporting CSV, JSON, FHIR, and VCF formats.
+    • LLM Support: Guides users (e.g., “Visualize air quality risks for my ENFJ community goals”).
+🧬 AI-Driven Health Risk Predictions
+    • Functionality: Predicts health risks (e.g., respiratory issues from air quality) using PyTorch in health_predictor.py, integrating environmental, health, and genomic data.
+    • Frontend: HealthDetails.jsx displays MBTI-tailored recommendations (e.g., “Mitigate asthma risks for your ISTP lifestyle”).
+    • Backend: Exposes /predict endpoint for real-time predictions.
+    • Multithreading: Uses multiprocessing if CPU cores > 4 and memory > 8GB, based on /resources/check.
+🤖 LLM Usability
+    • Queries: Supports MBTI-tailored queries for all 16 types (e.g., “Create a strategic health plan for ENTJ” or “Suggest creative mitigation strategies for INFP”).
+    • Troubleshooting: Analyzes errors (e.g., “Why is my 3D visualization slow?”) with detailed logs for INTJ/INTP or quick fixes for ESTP/ESFP.
+🌐 Real-Time Collaboration
+    • Functionality: WebSocket-based collaboration for health risk assessments and mitigation planning, with MBTI-tailored features (e.g., leadership for ENTJ, empathy for INFJ).
+    • Frontend: CollabPanel.jsx supports live annotations and dashboards.
+    • Backend: collaboration-service manages sessions with Spring WebSocket.
+📉 Computing Resource Monitoring
+    • Functionality: Monitors CPU/memory/GPU via ResourceMonitor.jsx and climate-visualizer, ensuring stability for 3D rendering and AI predictions.
+    • Multithreading: Enables ExecutorService or multiprocessing based on /resources/check.
+🛠️ Troubleshooting Support
+    • Functionality: Provides manual and LLM-assisted debugging via Troubleshoot.jsx and llm-service for issues with CSV, JSON, FHIR, or VCF data.
+    • MBTI Usability: Detailed logs for INTJ/INTP/ENTJ, step-by-step fixes for ISTJ/ESTJ, simplified guidance for ESFJ/ISFJ/INFP/INFJ, quick tips for ESTP/ESFP/ENTP, motivational prompts for ENFJ, practical solutions for ISTP, creative suggestions for ISFP, and visionary advice for ENFJ.
+📝 Claude Code Sub-Agents
+To efficiently develop ClimateHealthMapper, use the following Claude Code sub-agents, configured as Markdown files in ~/.claude/agents/ with YAML frontmatter:
+    1. backend-architect:
+        ◦ Prompt: “Design scalable REST APIs and microservices in Spring Boot 3 and FastAPI, integrating CSV, JSON, FHIR, and VCF data. Follow SOLID principles, ensure QGIS/FHIR compatibility, and tailor outputs for ENTJ (strategic), ISTJ (structured), and ESTJ (organized).”
+        ◦ Tasks: Build climate-integrator and climate-visualizer APIs.
+    2. frontend-developer:
+        ◦ Prompt: “Build responsive React components with Three.js and Tailwind CSS for 3D climate-health visualizations, tailored for INFP (creative), INFJ (intuitive), ESFP (vibrant), and ENTP (exploratory). Ensure accessibility and export functionality (PNG/SVG/STL).”
+        ◦ Tasks: Develop ClimateViewer.jsx, HealthDetails.jsx.
+    3. ai-engineer:
+        ◦ Prompt: “Develop PyTorch models for health risk predictions using environmental, health, and genomic data. Optimize with multiprocessing and ensure ENTJ (strategic), ESTP (actionable), and ENFJ (visionary) outputs.”
+        ◦ Tasks: Implement health_predictor.py and model.pt.
+    4. llm-specialist:
+        ◦ Prompt: “Implement FastAPI endpoints for LLM queries and troubleshooting, tailoring responses for ENTJ (strategic), INFP (creative), INFJ (empathetic), ESTP (actionable), and all 16 MBTI types.”
+        ◦ Tasks: Build llm-service endpoints.
+    5. code-reviewer:
+        ◦ Prompt: “Review code for best practices, security, and QGIS/FHIR compatibility. Provide feedback for ENTJ (actionable), INFP (encouraging), ESTP (quick fixes), and ISFJ (supportive).”
+        ◦ Tasks: Audit all services and components.
+    6. test-automator:
+        ◦ Prompt: “Generate JUnit, Jest, and Pytest tests for Spring Boot, FastAPI, and React components, aiming for 90%+ coverage. Tailor reports for ENTJ (metrics-driven), ISTJ (structured), and ESTJ (organized).”
+        ◦ Tasks: Create test suites for all modules.
+    7. security-auditor:
+        ◦ Prompt: “Scan code for OWASP, GDPR, HIPAA compliance, ensuring secure health and genomic data handling. Provide reports for ENTJ (prioritized fixes), ESTP (quick actions), and ISFJ (practical).”
+        ◦ Tasks: Run OWASP ZAP scans and validate encryption.
+    8. api-documenter:
+        ◦ Prompt: “Generate OpenAPI/Swagger specs and user guides, tailoring for ENTJ (strategic), INFP (narrative-driven), ESTP (quick-start), and ENFJ (inspirational).”
+        ◦ Tasks: Update README.md and API documentation.
+Orchestration:
+claude-agents init --respect-context-forge
+claude-agents run project-planner --task "Orchestrate full-stack development for ClimateHealthMapper"
+⚡ Setup Instructions
+    1. Prerequisites: Docker, Node.js 18, Java 17, Python 3.10, Git, Kubernetes CLI (optional), xAI/Hugging Face API key, FHIR credentials.
+    2. Local Development:
+git clone <repository>
+cd ClimateHealthMapper
+docker-compose up --build
+    3. Access:
+        ◦ Frontend: http://localhost:3000
+        ◦ API Gateway: http://localhost:8080
+        ◦ Troubleshooting: http://localhost:3000/troubleshoot
+        ◦ Collaboration: http://localhost:3000/collaborate
+    4. Kubernetes Deployment:
+kubectl apply -f infra/kubernetes/
+📝 AI Builder Instructions
+    • Code Quality: Ensure no build errors with ESLint, Checkstyle, Flake8, TypeScript, and >90% test coverage (JUnit, Jest, Pytest).
+    • Multithreading: Enable ExecutorService (Java) or multiprocessing (Python) if CPU cores > 4 and memory > 8GB, based on /resources/check.
+    • MBTI Usability: Tailor UI and LLM responses for all 16 MBTI types.
+    • Compatibility: Use BioJava/BioPython for VCF, CSV, JSON, FHIR parsing; Three.js for QGIS-like visualizations.
+    • Copyright: Use open-source libraries (Apache/MIT); validate with license-checker.
+    • Testing: Run GitHub Actions with linting, unit tests, integration tests (Postman), and security scans (OWASP ZAP).
+💡 Cost Estimates
+    • Claude Pro: $20/month per user for sub-agent access.
+    • Claude Max: $100/month for team collaboration and higher limits.
+    • Additional Costs:
+        ◦ Cloud hosting (AWS, Azure): $5,000–$50,000/month.
+        ◦ Data acquisition (environmental, health, genomic): $10,000–$500,000.
+        ◦ Compliance audits (GDPR, HIPAA): $10,000–$150,000.
+🌟 Why It Advances Humanity
+    • Mitigates Climate-Health Risks: Addresses WHO’s 250,000 annual death projection with data-driven solutions.
+    • Empowers Stakeholders: Provides personalized and community-level health insights for individuals, providers, and policymakers.
+    • Inclusive and Accessible: Open-source design and MBTI-tailored interfaces ensure usability in diverse, low-resource settings.
+    • Scalable Impact: Real-time collaboration and compatibility with QGIS/FHIR enable global health improvements.
+Also do not forget to create tests for the Project and please only reference libarires that you are to use.
+Also please add a way users, moderators, admins and for enterprise to have SSO, with options for MFA

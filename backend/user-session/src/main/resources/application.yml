@@ -1,0 +1,148 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: user-session-service
+
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/climate_health_db
+    username: postgres
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+    open-in-view: false
+
+  # Redis Configuration for Session Management
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+  # OAuth2 Client Configuration
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            scope: openid,profile,email
+            redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8081/api/session/auth/login/sso/google/callback}
+
+          azure:
+            client-id: ${AZURE_CLIENT_ID:}
+            client-secret: ${AZURE_CLIENT_SECRET:}
+            scope: openid,profile,email
+            redirect-uri: ${AZURE_REDIRECT_URI:http://localhost:8081/api/session/auth/login/sso/azure/callback}
+
+          okta:
+            client-id: ${OKTA_CLIENT_ID:}
+            client-secret: ${OKTA_CLIENT_SECRET:}
+            scope: openid,profile,email
+            redirect-uri: ${OKTA_REDIRECT_URI:http://localhost:8081/api/session/auth/login/sso/okta/callback}
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:change-this-to-a-very-long-random-secret-key-for-production-use-at-least-256-bits}
+  access-token-expiration: 3600  # 1 hour in seconds
+  refresh-token-expiration: 86400  # 24 hours in seconds
+
+# SSO Provider Configuration
+sso:
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:}
+    client-secret: ${GOOGLE_CLIENT_SECRET:}
+    redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8081/api/session/auth/login/sso/google/callback}
+
+  azure:
+    client-id: ${AZURE_CLIENT_ID:}
+    client-secret: ${AZURE_CLIENT_SECRET:}
+    tenant-id: ${AZURE_TENANT_ID:common}
+    redirect-uri: ${AZURE_REDIRECT_URI:http://localhost:8081/api/session/auth/login/sso/azure/callback}
+
+  okta:
+    client-id: ${OKTA_CLIENT_ID:}
+    client-secret: ${OKTA_CLIENT_SECRET:}
+    domain: ${OKTA_DOMAIN:}
+    redirect-uri: ${OKTA_REDIRECT_URI:http://localhost:8081/api/session/auth/login/sso/okta/callback}
+
+  saml:
+    entity-id: ${SAML_ENTITY_ID:}
+    metadata-url: ${SAML_METADATA_URL:}
+    acs-url: ${SAML_ACS_URL:http://localhost:8081/api/session/auth/login/sso/saml/callback}
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.climate.session: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/user-session.log
+    max-size: 10MB
+    max-history: 30
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Application Configuration
+app:
+  security:
+    max-login-attempts: 5
+    account-lock-duration: 30  # minutes
+    password-min-length: 8
+    require-special-characters: true
+    require-numbers: true
+    require-uppercase: true
+
+  mfa:
+    enabled: true
+    code-length: 6
+    time-step: 30  # seconds
+    backup-codes-count: 10
+
+  session:
+    timeout: 3600  # seconds
+    max-concurrent-sessions: 3

@@ -1,0 +1,40 @@
+# Redis Configuration for ClimateHealthMapper
+
+# Network
+bind 0.0.0.0
+port 6379
+timeout 300
+
+# General
+daemonize no
+loglevel notice
+databases 16
+
+# Persistence
+save 900 1
+save 300 10
+save 60 10000
+stop-writes-on-bgsave-error yes
+rdbcompression yes
+rdbchecksum yes
+dbfilename dump.rdb
+dir /data
+
+# Replication
+replica-read-only yes
+
+# Security
+# requirepass your-secure-password-here
+
+# Memory Management
+maxmemory 512mb
+maxmemory-policy allkeys-lru
+
+# Append Only File
+appendonly yes
+appendfilename "appendonly.aof"
+appendfsync everysec
+
+# Slow Log
+slowlog-log-slower-than 10000
+slowlog-max-len 128

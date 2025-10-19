@@ -1,0 +1,257 @@
+# Prometheus Configuration for ClimateHealthMapper
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'climate-health-production'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - '/etc/prometheus/rules/*.yml'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+    - targets: ['localhost:9090']
+
+  # Kubernetes API server
+  - job_name: 'kubernetes-apiservers'
+    kubernetes_sd_configs:
+    - role: endpoints
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+      action: keep
+      regex: default;kubernetes;https
+
+  # Kubernetes nodes
+  - job_name: 'kubernetes-nodes'
+    kubernetes_sd_configs:
+    - role: node
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    relabel_configs:
+    - action: labelmap
+      regex: __meta_kubernetes_node_label_(.+)
+    - target_label: __address__
+      replacement: kubernetes.default.svc:443
+    - source_labels: [__meta_kubernetes_node_name]
+      regex: (.+)
+      target_label: __metrics_path__
+      replacement: /api/v1/nodes/${1}/proxy/metrics
+
+  # Kubernetes pods
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+    - role: pod
+      namespaces:
+        names:
+        - climate-health
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+      action: keep
+      regex: true
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+      action: replace
+      target_label: __metrics_path__
+      regex: (.+)
+    - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+      action: replace
+      regex: ([^:]+)(?::\d+)?;(\d+)
+      replacement: $1:$2
+      target_label: __address__
+    - action: labelmap
+      regex: __meta_kubernetes_pod_label_(.+)
+    - source_labels: [__meta_kubernetes_namespace]
+      action: replace
+      target_label: kubernetes_namespace
+    - source_labels: [__meta_kubernetes_pod_name]
+      action: replace
+      target_label: kubernetes_pod_name
+    - source_labels: [__meta_kubernetes_pod_container_name]
+      action: replace
+      target_label: container
+
+  # API Gateway
+  - job_name: 'api-gateway'
+    kubernetes_sd_configs:
+    - role: pod
+      namespaces:
+        names:
+        - climate-health
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_label_app]
+      action: keep
+      regex: api-gateway
+    - source_labels: [__meta_kubernetes_pod_ip]
+      action: replace
+      target_label: __address__
+      replacement: $1:8080
+    - source_labels: [__meta_kubernetes_pod_name]
+      action: replace
+      target_label: instance
+    metric_relabel_configs:
+    - source_labels: [__name__]
+      regex: 'jvm_.*|http_.*|spring_.*'
+      action: keep
+
+  # Climate Integrator
+  - job_name: 'climate-integrator'
+    kubernetes_sd_configs:
+    - role: pod
+      namespaces:
+        names:
+        - climate-health
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_label_app]
+      action: keep
+      regex: climate-integrator
+    - source_labels: [__meta_kubernetes_pod_ip]
+      action: replace
+      target_label: __address__
+      replacement: $1:8081
+
+  # Climate Visualizer
+  - job_name: 'climate-visualizer'
+    kubernetes_sd_configs:
+    - role: pod
+      namespaces:
+        names:
+        - climate-health
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_label_app]
+      action: keep
+      regex: climate-visualizer
+    - source_labels: [__meta_kubernetes_pod_ip]
+      action: replace
+      target_label: __address__
+      replacement: $1:8082
+
+  # User Session
+  - job_name: 'user-session'
+    kubernetes_sd_configs:
+    - role: pod
+      namespaces:
+        names:
+        - climate-health
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_label_app]
+      action: keep
+      regex: user-session
+    - source_labels: [__meta_kubernetes_pod_ip]
+      action: replace
+      target_label: __address__
+      replacement: $1:8083
+
+  # LLM Service
+  - job_name: 'llm-service'
+    kubernetes_sd_configs:
+    - role: pod
+      namespaces:
+        names:
+        - climate-health
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_label_app]
+      action: keep
+      regex: llm-service
+    - source_labels: [__meta_kubernetes_pod_ip]
+      action: replace
+      target_label: __address__
+      replacement: $1:8084
+
+  # Collaboration Service
+  - job_name: 'collaboration-service'
+    kubernetes_sd_configs:
+    - role: pod
+      namespaces:
+        names:
+        - climate-health
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_label_app]
+      action: keep
+      regex: collaboration-service
+    - source_labels: [__meta_kubernetes_pod_ip]
+      action: replace
+      target_label: __address__
+      replacement: $1:8085
+
+  # AI Model Service
+  - job_name: 'ai-model'
+    kubernetes_sd_configs:
+    - role: pod
+      namespaces:
+        names:
+        - climate-health
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_label_app]
+      action: keep
+      regex: ai-model
+    - source_labels: [__meta_kubernetes_pod_ip]
+      action: replace
+      target_label: __address__
+      replacement: $1:8086
+
+  # PostgreSQL
+  - job_name: 'postgres'
+    static_configs:
+    - targets: ['postgres.climate-health.svc.cluster.local:5432']
+      labels:
+        service: 'postgres'
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+    - targets: ['redis.climate-health.svc.cluster.local:6379']
+      labels:
+        service: 'redis'
+
+  # Node Exporter
+  - job_name: 'node-exporter'
+    kubernetes_sd_configs:
+    - role: node
+    relabel_configs:
+    - source_labels: [__address__]
+      regex: '(.*):10250'
+      replacement: '${1}:9100'
+      target_label: __address__
+    - source_labels: [__meta_kubernetes_node_name]
+      target_label: node
+
+  # kube-state-metrics
+  - job_name: 'kube-state-metrics'
+    static_configs:
+    - targets: ['kube-state-metrics.kube-system.svc.cluster.local:8080']
+
+  # cAdvisor
+  - job_name: 'cadvisor'
+    kubernetes_sd_configs:
+    - role: node
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    relabel_configs:
+    - action: labelmap
+      regex: __meta_kubernetes_node_label_(.+)
+    - target_label: __address__
+      replacement: kubernetes.default.svc:443
+    - source_labels: [__meta_kubernetes_node_name]
+      regex: (.+)
+      target_label: __metrics_path__
+      replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor

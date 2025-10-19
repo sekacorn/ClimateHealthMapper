@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: climate-visualizer-test
+
+  # H2 Test Database
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # JPA Configuration for Tests
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  # Disable Redis for tests
+  data:
+    redis:
+      repositories:
+        enabled: false
+
+  cache:
+    type: none
+
+# Logging Configuration for Tests
+logging:
+  level:
+    root: ERROR
+    com.climate.visualizer: DEBUG
+    org.springframework: WARN
+    org.hibernate: WARN
+
+# Test-specific Configuration
+app:
+  resources:
+    max-cpu-usage: 95.0
+    max-memory-usage: 95.0
+
+  visualization:
+    default-quality: low
+    max-data-points: 100
+    cache-enabled: false
+
+  export:
+    output-directory: ./test-exports
+
+  processing:
+    timeout-seconds: 30
+    max-concurrent-tasks: 2

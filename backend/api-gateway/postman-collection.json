@@ -1,0 +1,422 @@
+{
+  "info": {
+    "name": "ClimateHealth API Gateway",
+    "description": "API collection for testing the ClimateHealth API Gateway",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health & Monitoring",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/actuator/health",
+              "host": ["{{base_url}}"],
+              "path": ["actuator", "health"]
+            }
+          }
+        },
+        {
+          "name": "Prometheus Metrics",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/actuator/prometheus",
+              "host": ["{{base_url}}"],
+              "path": ["actuator", "prometheus"]
+            }
+          }
+        },
+        {
+          "name": "Circuit Breaker Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/actuator/health/circuitBreakers",
+              "host": ["{{base_url}}"],
+              "path": ["actuator", "health", "circuitBreakers"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication (Public)",
+      "item": [
+        {
+          "name": "User Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('jwt_token', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/session/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "session", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "User Registration",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/session/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "session", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/session/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["api", "session", "auth", "refresh"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Climate Integrator Service",
+      "item": [
+        {
+          "name": "Get Climate Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/integrator/climate/data?location=London&startDate=2024-01-01&endDate=2024-12-31",
+              "host": ["{{base_url}}"],
+              "path": ["api", "integrator", "climate", "data"],
+              "query": [
+                {
+                  "key": "location",
+                  "value": "London"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Integrate External Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"source\": \"NOAA\",\n  \"dataType\": \"temperature\",\n  \"region\": \"North America\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/integrator/integrate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "integrator", "integrate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Climate Visualizer Service",
+      "item": [
+        {
+          "name": "Get Visualization",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/visualizer/charts/temperature?location=London&timeRange=1y",
+              "host": ["{{base_url}}"],
+              "path": ["api", "visualizer", "charts", "temperature"],
+              "query": [
+                {
+                  "key": "location",
+                  "value": "London"
+                },
+                {
+                  "key": "timeRange",
+                  "value": "1y"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Generate Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportType\": \"climate-health-assessment\",\n  \"region\": \"Europe\",\n  \"dateRange\": {\n    \"start\": \"2024-01-01\",\n    \"end\": \"2024-12-31\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/visualizer/reports/generate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "visualizer", "reports", "generate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "LLM Service",
+      "item": [
+        {
+          "name": "Ask Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What is the impact of climate change on respiratory health?\",\n  \"context\": \"global\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/llm/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "llm", "chat"]
+            }
+          }
+        },
+        {
+          "name": "Analyze Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": [...],\n  \"analysisType\": \"trend-prediction\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/llm/analyze",
+              "host": ["{{base_url}}"],
+              "path": ["api", "llm", "analyze"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Collaboration Service",
+      "item": [
+        {
+          "name": "Get Projects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/collab/projects",
+              "host": ["{{base_url}}"],
+              "path": ["api", "collab", "projects"]
+            }
+          }
+        },
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Climate Health Research 2025\",\n  \"description\": \"Collaborative research on climate impact on public health\",\n  \"members\": [\"user1@example.com\", \"user2@example.com\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/collab/projects",
+              "host": ["{{base_url}}"],
+              "path": ["api", "collab", "projects"]
+            }
+          }
+        },
+        {
+          "name": "Share Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectId\": \"project-123\",\n  \"documentName\": \"Research Findings Q1 2025\",\n  \"sharedWith\": [\"user3@example.com\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/collab/documents/share",
+              "host": ["{{base_url}}"],
+              "path": ["api", "collab", "documents", "share"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rate Limit Testing",
+      "item": [
+        {
+          "name": "Test Rate Limit - Single Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/integrator/climate/data",
+              "host": ["{{base_url}}"],
+              "path": ["api", "integrator", "climate", "data"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fallback Testing",
+      "item": [
+        {
+          "name": "Test Integrator Fallback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/fallback/integrator",
+              "host": ["{{base_url}}"],
+              "path": ["fallback", "integrator"]
+            }
+          }
+        },
+        {
+          "name": "Test Visualizer Fallback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/fallback/visualizer",
+              "host": ["{{base_url}}"],
+              "path": ["fallback", "visualizer"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

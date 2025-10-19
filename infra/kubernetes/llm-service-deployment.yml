@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-service
+  namespace: climate-health
+  labels:
+    app: llm-service
+spec:
+  ports:
+  - port: 8084
+    targetPort: 8084
+    name: http
+  selector:
+    app: llm-service
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-service
+  namespace: climate-health
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: llm-service
+  template:
+    metadata:
+      labels:
+        app: llm-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8084"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: llm-service
+        image: climate-health/llm-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8084
+          name: http
+        env:
+        - name: PORT
+          value: "8084"
+        - name: ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: climate-health-config
+              key: ENVIRONMENT
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: climate-health-config
+              key: LOG_LEVEL
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: climate-health-config
+              key: REDIS_HOST
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: climate-health-secrets
+              key: REDIS_PASSWORD
+        - name: AI_MODEL_URL
+          valueFrom:
+            configMapKeyRef:
+              name: climate-health-config
+              key: AI_MODEL_URL
+        - name: MAX_SEQUENCE_LENGTH
+          valueFrom:
+            configMapKeyRef:
+              name: climate-health-config
+              key: MAX_SEQUENCE_LENGTH
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8084
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8084
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8084
+          initialDelaySeconds: 0
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30

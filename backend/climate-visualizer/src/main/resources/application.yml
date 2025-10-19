@@ -1,0 +1,183 @@
+spring:
+  application:
+    name: climate-visualizer
+
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/climate_visualizer
+    username: postgres
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # JPA Configuration
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # Redis Configuration
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_PASSWORD:}
+      timeout: 60000
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: -1ms
+
+  # Cache Configuration
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000 # 1 hour
+      cache-null-values: false
+
+  # Server Configuration
+  server:
+    port: 8083
+    servlet:
+      context-path: /
+    compression:
+      enabled: true
+      mime-types: application/json,application/xml,text/html,text/xml,text/plain
+    tomcat:
+      threads:
+        max: 200
+        min-spare: 10
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.climate.visualizer: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/climate-visualizer.log
+    max-size: 10MB
+    max-history: 30
+
+# Application Configuration
+app:
+  # Resource Limits
+  resources:
+    max-cpu-usage: 85.0
+    max-memory-usage: 90.0
+    min-available-memory-mb: 512
+    thread-pool:
+      min-size: 2
+      max-size: 32
+      keep-alive-seconds: 60
+
+  # Visualization Settings
+  visualization:
+    default-quality: medium
+    max-data-points: 10000
+    cache-enabled: true
+    cache-ttl-minutes: 60
+
+    quality-settings:
+      low:
+        grid-size: 20
+        max-vertices: 400
+        render-detail: basic
+      medium:
+        grid-size: 50
+        max-vertices: 2500
+        render-detail: standard
+      high:
+        grid-size: 100
+        max-vertices: 10000
+        render-detail: enhanced
+
+  # Export Settings
+  export:
+    output-directory: ./exports
+    max-export-size-mb: 50
+    formats:
+      - PNG
+      - SVG
+      - STL
+    png:
+      default-width: 1920
+      default-height: 1080
+      quality: 0.95
+    svg:
+      default-width: 1920
+      default-height: 1080
+    stl:
+      binary: false
+      scale-factor: 1.0
+
+  # MBTI Styling
+  mbti:
+    enabled: true
+    default-type: INTJ
+    cache-styles: true
+
+  # Processing Settings
+  processing:
+    timeout-seconds: 300
+    max-concurrent-tasks: 10
+    enable-multithreading: true
+    batch-size: 100
+
+# Async Configuration
+async:
+  executor:
+    core-pool-size: 5
+    max-pool-size: 20
+    queue-capacity: 100
+    thread-name-prefix: async-
+
+# CORS Configuration
+cors:
+  allowed-origins:
+    - http://localhost:3000
+    - http://localhost:4200
+  allowed-methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - OPTIONS
+  allowed-headers:
+    - "*"
+  allow-credentials: true
+  max-age: 3600
